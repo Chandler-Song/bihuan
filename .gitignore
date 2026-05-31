@@ -1,0 +1,53 @@
+# ===== Node =====
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# ===== Environment =====
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+*.env
+
+# ===== Editor & IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===== Data & Database =====
+backend/data/
+frontend/data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ===== Temporary Files =====
+*.tmp
+*.temp
+*.cache
+.turbo/
+
+# ===== Coverage & Test =====
+coverage/
+.nyc_output/
+
+# ===== Deployment Scripts (包含敏感信息) =====
+deploy.sh
+deploy-manual.sh
+*.pem
+*.key
+
+# ===== Docker (可选，如需共享 Dockerfile 则注释掉) =====
+# docker-compose.override.yml
