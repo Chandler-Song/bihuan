@@ -23,12 +23,7 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      - .env
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - REDIS_URL=redis://redis:6379
-      - SQLITE_PATH=/app/data/bihuan.db
+      - .env.docker
     volumes:
       - bihuan-data:/app/data
     healthcheck:

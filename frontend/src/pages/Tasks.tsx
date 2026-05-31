@@ -68,13 +68,13 @@ export default function Tasks() {
       <Typography.Title level={3} style={{ marginTop: 0 }}>全部任务</Typography.Title>
       <Card size="small" style={{ marginBottom: 12 }}>
         <Space direction="vertical" style={{ width: '100%' }} size={12}>
-          <Space wrap>
+          <Space wrap size={[0, 8]}>
             <Input.Search
               allowClear
               placeholder="搜索任务关键字"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              style={{ width: 280 }}
+              style={{ width: '100%', maxWidth: 280 }}
             />
             <Segmented
               value={status}
@@ -86,7 +86,7 @@ export default function Tasks() {
               ]}
             />
           </Space>
-          <Space wrap>
+          <Space wrap size={[0, 8]}>
             <DateRangeFilter
               dateField={dateField}
               onDateFieldChange={setDateField}
@@ -98,7 +98,7 @@ export default function Tasks() {
               placeholder="按标签筛选"
               value={selectedTag}
               onChange={setSelectedTag}
-              style={{ width: 160 }}
+              style={{ width: '100%', maxWidth: 160 }}
               options={userTags.map(t => ({ label: t, value: t }))}
             />
             <Segmented

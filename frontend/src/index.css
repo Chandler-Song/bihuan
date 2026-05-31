@@ -6,3 +6,37 @@ html, body, #root {
     'Helvetica Neue', Helvetica, Arial, sans-serif;
   background: #f5f7fa;
 }
+
+/* 移动端响应式优化 */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  /* 卡片适配 */
+  .ant-card {
+    margin: 0 !important;
+  }
+  
+  /* 表格/列表横向滚动 */
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+  
+  /* 按钮组紧凑排列 */
+  .ant-space-compact {
+    flex-wrap: wrap;
+  }
+  
+  /* 输入框全宽 */
+  .ant-input-search,
+  .ant-select,
+  .ant-input-number {
+    max-width: 100% !important;
+  }
+  
+  /* 分页器居中 */
+  .ant-pagination {
+    justify-content: center;
+  }
+}

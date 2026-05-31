@@ -2,7 +2,7 @@ import { db } from '../../db';
 import { newId } from '../../utils/id';
 import { now, days, todayRange, toMs } from '../../utils/date';
 import { Errors } from '../../utils/errors';
-import { parseTaskByAI } from '../../services/qwen';
+import { ruleParser } from '../../services/qwen';
 import type { ListTaskQuery } from './tasks.schema';
 
 export interface TaskRow {
@@ -34,7 +34,8 @@ function pickEncourage(): string {
 }
 
 export async function createTask(userId: string, input: string): Promise<TaskRow> {
-  const parsed = await parseTaskByAI(input);
+  // 使用本地规则解析，不调用 AI，提升速度
+  const parsed = ruleParser(input);
   const id = newId();
   const created = now();
   const nextRemind = created + days(parsed.remindDays);
@@ -123,8 +124,11 @@ export function patchTask(userId: string, id: string, input: PatchInput): { task
     sets.push('reminded = 1');
     encourage = pickEncourage();
   }
-  if (input.status === 'pending' && row.status === 'pending') {
-    // no-op
+  if (input.status === 'pending' && row.status === 'done') {
+    // 重新打开已闭环的任务
+    sets.push("status = 'pending'");
+    sets.push('closed_at = NULL');
+    sets.push('reminded = 0');
   }
   if (input.next_remind_at !== undefined) {
     sets.push('next_remind_at = ?');
@@ -223,7 +227,15 @@ export function listTasks(userId: string, q: ListTaskQuery): {
     )
     .all(...args, q.pageSize, offset) as TaskRow[];
 
-  return { list, total, page: q.page, pageSize: q.pageSize };
+  // 为每个任务加载标签
+  const listWithTags = list.map((row) => {
+    const tags = (db.prepare(
+      `SELECT t.name FROM tags t JOIN task_tags tt ON t.id = tt.tag_id WHERE tt.task_id = ?`
+    ).all(row.id) as any[]).map((r) => r.name);
+    return { ...row, tags };
+  });
+
+  return { list: listWithTags, total, page: q.page, pageSize: q.pageSize };
 }
 
 export function getUserTags(userId: string): string[] {

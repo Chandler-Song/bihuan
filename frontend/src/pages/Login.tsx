@@ -10,12 +10,13 @@ export default function Login() {
   const [tab, setTab] = useState('password');
   const [sending, setSending] = useState(false);
   const [count, setCount] = useState(0);
+  const [codeForm] = Form.useForm();
 
-  async function onSendCode(email: string) {
-    if (!email) return message.warning('请先填写邮箱');
+  async function onSendCode() {
     try {
+      const values = await codeForm.validateFields(['email']);
       setSending(true);
-      await authApi.sendCode(email, 'login');
+      await authApi.sendCode(values.email, 'login');
       message.success('验证码已发送');
       setCount(60);
       const t = setInterval(() => {
@@ -24,6 +25,8 @@ export default function Login() {
           return c - 1;
         });
       }, 1000);
+    } catch {
+      // 验证失败，antd 会自动显示错误
     } finally {
       setSending(false);
     }
@@ -67,7 +70,7 @@ export default function Login() {
               key: 'code',
               label: '验证码登录',
               children: (
-                <Form layout="vertical" onFinish={onCodeSubmit} autoComplete="off">
+                <Form form={codeForm} layout="vertical" onFinish={onCodeSubmit} autoComplete="off">
                   <Form.Item name="email" label="邮箱" rules={[{ required: true, type: 'email' }]}>
                     <Input placeholder="you@example.com" />
                   </Form.Item>
@@ -78,9 +81,7 @@ export default function Login() {
                         disabled={count > 0 || sending}
                         onClick={(e) => {
                           e.preventDefault();
-                          const form = (e.target as HTMLElement).closest('form');
-                          const email = (form?.querySelector('input[id$="_email"]') as HTMLInputElement)?.value || '';
-                          onSendCode(email);
+                          onSendCode();
                         }}
                       >
                         {count > 0 ? `${count}s` : '获取'}

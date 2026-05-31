@@ -30,6 +30,11 @@ export default function TaskCard({ task, onChange }: Props) {
     if (r.encourage) message.success(r.encourage);
     onChange();
   }
+  async function reopen() {
+    await tasksApi.patch(task.id, { status: 'pending' });
+    message.success('已重新打开');
+    onChange();
+  }
   async function snooze(d: number) {
     await tasksApi.patch(task.id, { snoozeDays: d });
     message.success('已延期');
@@ -49,9 +54,13 @@ export default function TaskCard({ task, onChange }: Props) {
         background: danger ? '#fff1f0' : undefined,
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <Space size={6} wrap>
+            {/* 标签显示在前面 */}
+            {task.tags && task.tags.length > 0 && task.tags.map(tag => (
+              <Tag key={tag} color="blue">#{tag}</Tag>
+            ))}
             {task.priority === 'high' && <Tag color="red">重要</Tag>}
             {task.priority === 'low' && <Tag>不急</Tag>}
             {danger && <Tag color="red">紧急</Tag>}
@@ -60,42 +69,47 @@ export default function TaskCard({ task, onChange }: Props) {
               {task.content}
             </span>
           </Space>
-          {task.tags && task.tags.length > 0 && (
-            <div style={{ marginTop: 4 }}>
-              {task.tags.map(tag => (
-                <Tag key={tag} color="blue" style={{ marginRight: 4 }}>{tag}</Tag>
-              ))}
-            </div>
-          )}
           <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
             <ClockCircleOutlined /> 下次提醒 {dayjs(task.next_remind_at).format('MM-DD HH:mm')}
             {task.remind_count > 0 && ` · 已提醒 ${task.remind_count} 次`}
+            {task.closed_at && ` · 闭环于 ${dayjs(task.closed_at).format('MM-DD HH:mm')}`}
           </div>
         </div>
-        {task.status === 'pending' && (
-          <Space>
-            <Button size="small" icon={<EditOutlined />} onClick={() => setEditOpen(true)}>编辑</Button>
-            <Dropdown
-              menu={{
-                items: [
-                  ...SNOOZE_PRESETS.map((p) => ({
-                    key: String(p.days),
-                    label: p.label,
-                    onClick: () => snooze(p.days),
-                  })),
-                  { type: 'divider' as const },
-                  { key: 'custom', label: '自定义天数', onClick: () => setCustomOpen(true) },
-                ],
-              }}
-            >
-              <Button size="small">延期 <DownOutlined /></Button>
-            </Dropdown>
-            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={close}>闭环</Button>
-          </Space>
-        )}
-        <Popconfirm title="确定删除这个任务？" onConfirm={remove}>
-          <Button size="small" type="text" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
+        <Space size={[0, 8]} wrap>
+          {/* 所有任务都显示编辑按钮 */}
+          <Button size="small" icon={<EditOutlined />} onClick={() => setEditOpen(true)}>编辑</Button>
+          
+          {/* 未闭环任务显示延期和闭环按钮 */}
+          {task.status === 'pending' && (
+            <>
+              <Dropdown
+                menu={{
+                  items: [
+                    ...SNOOZE_PRESETS.map((p) => ({
+                      key: String(p.days),
+                      label: p.label,
+                      onClick: () => snooze(p.days),
+                    })),
+                    { type: 'divider' as const },
+                    { key: 'custom', label: '自定义天数', onClick: () => setCustomOpen(true) },
+                  ],
+                }}
+              >
+                <Button size="small">延期 <DownOutlined /></Button>
+              </Dropdown>
+              <Button size="small" type="primary" icon={<CheckOutlined />} onClick={close}>闭环</Button>
+            </>
+          )}
+          
+          {/* 已闭环任务显示重新打开按钮 */}
+          {task.status === 'done' && (
+            <Button size="small" type="primary" icon={<ClockCircleOutlined />} onClick={reopen}>重新打开</Button>
+          )}
+          
+          <Popconfirm title="确定删除这个任务？" onConfirm={remove}>
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
       </div>
       <Modal
         open={customOpen}

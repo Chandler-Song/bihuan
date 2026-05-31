@@ -104,15 +104,37 @@ export async function generateAISummary(
   const fallback = `${periodCN}新增 ${stats.newCount} 个任务，闭环 ${stats.closedCount} 个，闭环率 ${(stats.closeRate * 100).toFixed(0)}%。继续保持！`;
   if (!env.QWEN_API_KEY) return fallback;
   try {
-    const prompt = `请基于下面的任务统计数据生成一段中文总结，包含：1) 数据点评 2) 长期搁置任务提示 3) 一句鼓励语。控制在 200 字以内。
-数据：${JSON.stringify(stats)}
-周期：${periodCN}`;
+    const prompt = `你是任务管理教练，请基于以下数据生成详细的中文总结报告：
+
+## 数据概览
+- 统计周期：${periodCN}
+- 新增任务：${stats.newCount} 个
+- 闭环任务：${stats.closedCount} 个
+- 闭环率：${(stats.closeRate * 100).toFixed(1)}%
+- 当前待办：${stats.pendingCount} 个
+- 逾期任务：${stats.overdueCount} 个
+- 平均闭环耗时：${stats.avgClosedDays} 天
+
+## 长期搁置任务（超过14天未闭环）
+${stats.longPending && stats.longPending.length > 0 
+  ? stats.longPending.map(t => `-「${t.content}」（已搁置 ${Math.round(t.days)} 天）`).join('\n')
+  : '无长期搁置任务'}
+
+## 输出要求
+请按以下结构输出（控制在 300 字以内）：
+
+1. **数据点评**：分析本周期的关键数据，指出亮点与不足
+2. **内容统计**：总结完成了哪些类型的任务，设置了哪些待办，有哪些趋势
+3. **长期任务提醒**：针对搁置超过 14 天的任务给出具体建议
+4. **鼓励语**：一句简洁有力的鼓励
+
+语气友好、专业，避免空洞的套话。`;
     const resp = await axios.post(
       `${env.QWEN_BASE_URL}/chat/completions`,
       {
         model: env.QWEN_MODEL,
         messages: [
-          { role: 'system', content: '你是个性化任务管理教练，输出简洁友好的中文总结。' },
+          { role: 'system', content: '你是个性化任务管理教练，输出简洁、有深度、数据驱动的中文总结报告。善用emoji提升可读性。' },
           { role: 'user', content: prompt },
         ],
         temperature: 0.7,
